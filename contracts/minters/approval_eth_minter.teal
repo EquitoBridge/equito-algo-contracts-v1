@@ -1,0 +1,205 @@
+#pragma version 6
+txn ApplicationID
+int 0
+==
+bnz main_l14
+txn OnCompletion
+int NoOp
+==
+bnz main_l7
+txn OnCompletion
+int DeleteApplication
+==
+txn OnCompletion
+int UpdateApplication
+==
+||
+txn OnCompletion
+int OptIn
+==
+||
+bnz main_l6
+txn OnCompletion
+int CloseOut
+==
+bnz main_l5
+err
+main_l5:
+int 0
+return
+main_l6:
+int 1
+return
+main_l7:
+txna ApplicationArgs 0
+byte "setup"
+==
+bnz main_l13
+txna ApplicationArgs 0
+byte "mint"
+==
+bnz main_l12
+txna ApplicationArgs 0
+byte "burn"
+==
+bnz main_l11
+err
+main_l11:
+txn NumAccounts
+int 0
+==
+txn NumAppArgs
+int 2
+==
+&&
+txn NumAssets
+int 1
+==
+&&
+txna Assets 0
+byte "ASSET_ID"
+app_global_get
+==
+&&
+txna ApplicationArgs 1
+btoi
+int 0
+>
+&&
+assert
+txna Accounts 0
+txna ApplicationArgs 1
+btoi
+callsub receivetokens_2
+int 1
+return
+main_l12:
+txn NumAccounts
+int 1
+==
+txna Accounts 0
+byte "MULTISIG_ADDR"
+app_global_get
+==
+&&
+txn NumAppArgs
+int 2
+==
+&&
+txn NumAssets
+int 1
+==
+&&
+txna Assets 0
+byte "ASSET_ID"
+app_global_get
+==
+&&
+txna ApplicationArgs 1
+btoi
+int 0
+>
+&&
+assert
+txna Accounts 1
+txna ApplicationArgs 1
+btoi
+callsub sendtokens_1
+int 1
+return
+main_l13:
+byte "IS_SET"
+app_global_get
+int 0
+==
+txn NumAccounts
+int 0
+==
+&&
+txna Accounts 0
+byte "MULTISIG_ADDR"
+app_global_get
+==
+&&
+assert
+byte "IS_SET"
+int 1
+app_global_put
+byte "ASSET_ID"
+byte "Equito Wrapped ETH"
+byte "WETH"
+callsub createasset_0
+app_global_put
+int 1
+return
+main_l14:
+byte "MULTISIG_ADDR"
+txn Sender
+app_global_put
+int 1
+return
+
+// create_asset
+createasset_0:
+store 1
+store 0
+itxn_begin
+int acfg
+itxn_field TypeEnum
+int 0
+itxn_field ConfigAssetDefaultFrozen
+global CurrentApplicationAddress
+itxn_field ConfigAssetManager
+global CurrentApplicationAddress
+itxn_field ConfigAssetClawback
+global CurrentApplicationAddress
+itxn_field ConfigAssetReserve
+load 0
+itxn_field ConfigAssetName
+load 1
+itxn_field ConfigAssetUnitName
+int 18446744073709551615
+itxn_field ConfigAssetTotal
+int 6
+itxn_field ConfigAssetDecimals
+byte "https://www.equitofinance.com"
+itxn_field ConfigAssetURL
+itxn_submit
+itxn CreatedAssetID
+retsub
+
+// send_tokens
+sendtokens_1:
+store 3
+store 2
+itxn_begin
+int axfer
+itxn_field TypeEnum
+txna Assets 0
+itxn_field XferAsset
+global CurrentApplicationAddress
+itxn_field AssetSender
+load 2
+itxn_field AssetReceiver
+load 3
+itxn_field AssetAmount
+itxn_submit
+retsub
+
+// receive_tokens
+receivetokens_2:
+store 5
+store 4
+itxn_begin
+int axfer
+itxn_field TypeEnum
+txna Assets 0
+itxn_field XferAsset
+load 4
+itxn_field AssetSender
+global CurrentApplicationAddress
+itxn_field AssetReceiver
+load 5
+itxn_field AssetAmount
+itxn_submit
+retsub
