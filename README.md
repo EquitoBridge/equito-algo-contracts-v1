@@ -19,4 +19,7 @@ For Binance blockchain we have:
 - EthUsdcMinter
 ## Audit
 
-Both type of smart contract are audited by Certik
+Both type of smart contract are audited by Certik.
+
+[Certik Audit available here](./audit/REP-final-20221216T155748Z.pdf)
+
